@@ -2,7 +2,7 @@
 
 public class SuggestResponse
 {
-    public string Engine { get; set; } = "chinook";
+    public string Engine { get; set; } = "kingsrow";
     public string BestMove { get; set; } = default!;
     public string[] Pv { get; set; } = [];
     public int ScoreOrWdl { get; set; }

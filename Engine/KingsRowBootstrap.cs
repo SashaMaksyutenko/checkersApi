@@ -1,54 +1,37 @@
-﻿using CheckersApi.Engine;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
-public static class KingsRowBootstrap
+namespace CheckersApi.Engine
 {
-    private static bool _initialized;
-    private static readonly object _lock = new();
-
-    public static void Initialize(string dbPath, bool useInit)
+    public static class KingsRowBootstrap
     {
-        if (_initialized) return;
+        private static bool _initialized;
+        private static readonly object _lock = new();
 
-        lock (_lock)
+        public static void Initialize(string dbPath, bool useInit)
         {
             if (_initialized) return;
 
-            var baseDir = AppContext.BaseDirectory;
-
-            LoadAbsolute(Path.Combine(baseDir, "egdb64.dll"));
-            LoadAbsolute(Path.Combine(baseDir, "Kingsrow64.dll"));
-
-            if (useInit && !string.IsNullOrWhiteSpace(dbPath))
+            lock (_lock)
             {
-                // Convert relative path to absolute
-                var fullDbPath = Path.IsPathRooted(dbPath)
-                    ? dbPath
-                    : Path.Combine(baseDir, dbPath);
+                if (_initialized) return;
 
-                var cmd = $"init {fullDbPath}";
-                Console.WriteLine($"[KingsRowBootstrap] Initializing with: {cmd}");
-                var rc = NativeKingsRow.enginecommand(cmd);
-                if (rc != 0)
-                    throw new InvalidOperationException($"KingsRow init rc={rc} path={fullDbPath}");
+                var baseDir = AppContext.BaseDirectory;
 
-                Console.WriteLine($"[KingsRowBootstrap] Database initialized successfully");
+                LoadAbsolute(Path.Combine(baseDir, "egdb64.dll"));
+                LoadAbsolute(Path.Combine(baseDir, "Kingsrow64.dll"));
+
+                _initialized = true;
             }
-
-            _initialized = true;
         }
-    }
 
-    private static void LoadAbsolute(string fullPath)
-    {
-        if (!File.Exists(fullPath))
+        private static void LoadAbsolute(string fullPath)
         {
-            Console.WriteLine($"[KingsRowBootstrap] DLL not found: {fullPath}");
-            return;
-        }
+            if (!File.Exists(fullPath))
+                throw new DllNotFoundException($"DLL not found: {fullPath}");
 
-        var handle = NativeLibrary.Load(fullPath);
-        if (handle == IntPtr.Zero)
-            throw new DllNotFoundException($"Failed to load: {fullPath}");
+            var handle = NativeLibrary.Load(fullPath);
+            if (handle == IntPtr.Zero)
+                throw new DllNotFoundException($"Failed to load: {fullPath}");
+        }
     }
 }
